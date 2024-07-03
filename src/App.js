@@ -1,25 +1,46 @@
-import logo from './logo.svg';
-import './App.css';
+// src/App.js
+import React, { useState, useEffect } from 'react';
+import { connect, sendMessage, onMessageReceived } from './websocket';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const [message, setMessage] = useState('');
+    const [messages, setMessages] = useState([]);
+    const [connected, setConnected] = useState(false);
+
+    useEffect(() => {
+        connect(() => {
+            setConnected(true);
+            onMessageReceived((msg) => {
+                setMessages((prevMessages) => [...prevMessages, msg]);
+            });
+        });
+    }, []);
+
+    const handleSend = () => {
+        if (connected) {
+            sendMessage(message);
+            setMessage('');
+        } else {
+            console.error('Not connected to WebSocket');
+        }
+    };
+
+    return (
+        <div>
+            <h1>WebSocket Chat</h1>
+            <input
+                type="text"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+            />
+            <button onClick={handleSend}>Send</button>
+            <div>
+                {messages.map((msg, index) => (
+                    <div key={index}>{msg}</div>
+                ))}
+            </div>
+        </div>
+    );
 }
 
 export default App;
